@@ -16,6 +16,7 @@
 package de.codesourcery.particles;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.Random;
 
 public final class OutOfBoundsVisitor implements ParticleSystem.IAnimator 
@@ -27,8 +28,16 @@ public final class OutOfBoundsVisitor implements ParticleSystem.IAnimator
     public int particlesSpawned = 0;
     public int particlesKilled = 0;
     
+    private int shapeIdx;
+    public List<List<Vec2d>> customShapes = null;
+    
     private final ParticleSystem system;
     private float pxmin,pxmax,pymin,pymax;
+    
+    private int spawnCount;
+    private float elapsedTime;
+    
+    private long particleCount;
     
     public OutOfBoundsVisitor(ParticleSystem system) {
         this(system,new Random() );
@@ -55,42 +64,87 @@ public final class OutOfBoundsVisitor implements ParticleSystem.IAnimator
     public boolean isOutOfBounds(Particle p) {
         return p.posx < pxmin || p.posy < pymin || p.posx > pxmax || p.posy > pymax; 
     }
+    
+    @Override
+    public void beforeVisitingParticles(float deltaSeconds) 
+    {
+        elapsedTime+=deltaSeconds;
+        if ( elapsedTime > 0.15f) {
+            elapsedTime -= 0.15f;
+            if ( spawnCount > 0 ) {
+                spawnCount--;
+            }
+        }
+    }
 
     @Override
     public void tick(Particle particle, float deltaSeconds)
     {
+        particleCount++;
         particle.move( deltaSeconds );
         particle.age--;
         if ( particle.age < 0 || isOutOfBounds( particle ) )
         {
             particlesKilled++;
             particle.kill();
-        }
+            return;
+        } 
         if ( particle.age > 0 ) {
             particle.color = colors[ particle.age ];
         }
-        if ( Main.SPAWN_NEW && particle.age >= 30 && ! particle.isMarked() ) 
+        if ( (particleCount%10000) == 0 && spawnCount < 10) 
         {
-            final boolean fork = particle.age%3 == 0;
-            if ( fork ) 
-            {
-                boolean success = false;
-                for ( int count = 50 ; count >= 0 ; count-- ) 
-                {
-                    final Particle child = system.claimDeadParticle();
-                    if ( child == null ) 
-                    {
-                        break;
-                    }
-                    spawnChild( particle , child );
-                    success = true;
-                }
-                if ( success ) 
-                {
-                    particle.mark(true);
-                }
-            } 
+            if ( spawnChildren(particle) ) {
+                spawnCount++;
+            }
         }
+    }
+
+    protected boolean spawnChildren(Particle parent) 
+    {
+        boolean success = false;
+        if ( customShapes != null ) 
+        {
+            final List<Vec2d> customShape = customShapes.get( shapeIdx );
+            shapeIdx = (shapeIdx+1) % customShapes.size();
+            for ( int count = customShape.size()-1 ; count >= 0 ; count-- ) 
+            {
+                final Vec2d displacement = customShape.get(count);
+                final Particle child = system.claimDeadParticle();
+                if ( child == null ) 
+                {
+                    break;
+                }
+                
+                success = true;
+                
+                final float px = parent.posx;
+                final float py = parent.posy;
+                final float ax = 0;
+                final float ay = -9.81f*5;
+                final float vx = parent.vx+displacement.x;
+                final float vy = parent.vy+displacement.y;
+                final int maxAge = colors.length-1;
+                
+                particlesSpawned++;
+                child.instantiate().pos( px , py ).acceleration( ax,  ay ).color( colors[0] ).speed( vx , vy ).age( maxAge );                
+            }
+        } 
+        else 
+        {
+            System.out.println("No custom shape");
+            for ( int count = 50 ; count >= 0 ; count-- ) 
+            {
+                final Particle child = system.claimDeadParticle();
+                if ( child == null ) 
+                {
+                    break;
+                }
+                spawnChild( parent , child );
+                success = true;
+            }
+        }
+        return success;
     }
 
     private void spawnChild(Particle parent,Particle child) 
@@ -108,7 +162,7 @@ public final class OutOfBoundsVisitor implements ParticleSystem.IAnimator
         {
             initParticle( particle );
             particle.age( colors.length - 1  );
-        }, 10 );
+        }, 10000 );
     }
 
     private void initParticle(Particle particle)
@@ -117,8 +171,8 @@ public final class OutOfBoundsVisitor implements ParticleSystem.IAnimator
         final float py = (rnd.nextFloat()-0.5f)*20;
         final float ax = 0;
         final float ay = -9.81f*5;
-        final float vx = (rnd.nextFloat()-0.5f)*100;
-        final float vy = (rnd.nextFloat()-0.5f)*100;    
+        final float vx = (rnd.nextFloat()-0.5f)*200;
+        final float vy = (rnd.nextFloat()-0.5f)*200;    
         final int maxAge = colors.length-1;
         
         particlesSpawned++;

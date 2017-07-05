@@ -15,7 +15,7 @@
  */
 package de.codesourcery.particles;
 
-public class ColorHelper {
+public class ColorUtils {
 
     public static int r(int color) {
         return (color & 0xff0000) >> 16;

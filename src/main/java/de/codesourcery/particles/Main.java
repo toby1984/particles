@@ -20,7 +20,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -56,6 +58,15 @@ public class Main extends JFrame
         {
             this.system = new ParticleSystem(500000);
             this.outOfBoundsCheck = new OutOfBoundsVisitor(system,new Random(0xdeadbeef));
+            
+            this.outOfBoundsCheck.customShapes = Arrays.asList(
+                  ImageToVectors.load("This", 0.25f),
+                  ImageToVectors.load("is", 0.25f),
+                  ImageToVectors.load("just", 0.25f),
+                  ImageToVectors.load("a", 0.25f),
+                  ImageToVectors.load("test", 0.25f)
+            );              
+            
             system.setAnimator( this.outOfBoundsCheck );
             this.initializer = this.outOfBoundsCheck::init;
         }
@@ -91,8 +102,8 @@ public class Main extends JFrame
 
             long now2 = System.currentTimeMillis();
 
-            if ( system.allDead() ) {
-
+            if ( system.allDead() ) 
+            {
                 System.out.println("All dead");
                 initializer.accept( system );
             } 
@@ -137,6 +148,7 @@ public class Main extends JFrame
         frame.getContentPane().add( panel );
         frame.pack();
         frame.setLocationRelativeTo( null );
+        frame.setExtendedState( frame.getExtendedState()|JFrame.MAXIMIZED_BOTH );
         frame.setVisible( true );
 
         final Timer timer = new Timer(16, ev -> 

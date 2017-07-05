@@ -33,6 +33,8 @@ public class ParticleSystem
     
     public interface IAnimator 
     {
+        public void beforeVisitingParticles(float deltaSeconds);
+        
         public void tick(Particle p,float deltaSeconds);
     }
     
@@ -72,6 +74,8 @@ public class ParticleSystem
     {
         synchronized(particles) 
         {
+            this.animator.beforeVisitingParticles( deltaSeconds );
+            
             int alivePtr=0,deadPtr=0;
             for (int i = particles.length-1 ; i >= 0 ; i--) 
             {

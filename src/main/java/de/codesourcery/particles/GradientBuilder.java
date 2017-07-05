@@ -32,9 +32,9 @@ public class GradientBuilder
             this.color = color;
         }
         
-        public int r() { return ColorHelper.r( this.color ); }
-        public int g() { return ColorHelper.g( this.color ); }
-        public int b() { return ColorHelper.b( this.color ); }
+        public int r() { return ColorUtils.r( this.color ); }
+        public int g() { return ColorUtils.g( this.color ); }
+        public int b() { return ColorUtils.b( this.color ); }
     }
     
     public final class GradientSteps implements GradientEntry
@@ -112,7 +112,7 @@ public class GradientBuilder
                     r0 += dr;
                     g0 += dg;
                     b0 += db;
-                    final int color = ColorHelper.toColor( (int) Math.round( r0 ) , (int) Math.round( g0 ),(int) Math.round( b0 ) );
+                    final int color = ColorUtils.toColor( (int) Math.round( r0 ) , (int) Math.round( g0 ),(int) Math.round( b0 ) );
                     result.add( color);
                     previousColor = new GradientColor( color );
                 }                
