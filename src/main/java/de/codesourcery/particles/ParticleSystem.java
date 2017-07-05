@@ -1,5 +1,9 @@
 package de.codesourcery.particles;
 
+import java.util.Arrays;
+
+import org.apache.commons.lang3.Validate;
+
 import de.codesourcery.particles.Particle.State;
 
 public class ParticleSystem
@@ -8,16 +12,28 @@ public class ParticleSystem
     private final Particle[] alive;
     private final Particle[] dead;
     
-    private int lastDeadIdx;
+    private int lastDeadIdx=-1;
     private int aliveCounter;
-    private final Animator animator;
+    private IAnimator animator;
     
-    public static abstract class Animator 
+    public interface IAnimator 
     {
-        public abstract void tick(Particle p,float deltaMs);
+        public void tick(Particle p,float deltaSeconds);
     }
     
-    public ParticleSystem(Animator animator,int size) 
+    public void reset() 
+    {
+        Arrays.fill(alive , null );
+        Arrays.fill(dead , null );
+        aliveCounter=0;
+        lastDeadIdx=-1;
+        for ( int i = particles.length-1; i >= 0 ; i-- ) 
+        {
+            this.particles[i].reset();
+        }        
+    }
+    
+    public ParticleSystem(int size) 
     {
         if ( size < 1 ) {
             throw new IllegalArgumentException("Size must be >= 1");
@@ -27,12 +43,17 @@ public class ParticleSystem
         this.dead = new Particle[ size+1 ];
         for ( int i = size-1 ; i >= 0 ; i-- ) 
         {
-            this.particles[i] = new Particle(i);
+            this.particles[i] = new Particle();
         }
+    }
+    
+    public void setAnimator(IAnimator animator) 
+    {
+        Validate.notNull(animator,"animator must not be NULL");
         this.animator = animator;
     }
     
-    public void tick(float deltaMs) 
+    public void tick(float deltaSeconds) 
     {
         synchronized(particles) 
         {
@@ -53,7 +74,7 @@ public class ParticleSystem
                 if ( p.isAlive() ) 
                 {
                     this.alive[ alivePtr++ ] = p;  
-                    this.animator.tick( p , deltaMs );
+                    this.animator.tick( p , deltaSeconds );
                 } else {
                     this.dead[ deadPtr++ ] = p;                    
                 }

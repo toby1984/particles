@@ -2,8 +2,6 @@ package de.codesourcery.particles;
 
 public class Particle
 {
-    public final int id;
-    
     public enum State 
     {
         DYING 
@@ -76,17 +74,23 @@ public class Particle
     public int color = 0xffffff;
     public int age;
     private boolean mark;
-    
     private State state = State.DEAD;
-    
-    public Particle(int id) {
-        this.id = id;
-    }
     
     public Particle pos(float x,float y) {
         this.posx = x;
         this.posy = y;
         return this;
+    }
+    
+    public void reset() 
+    {
+        posx=posy=0;
+        ax=ay=0;
+        vx=vy=0;
+        color=0xffffffff;
+        age=0;
+        mark=false;
+        state = State.DEAD;
     }
     
     public boolean isMarked() {
@@ -161,6 +165,6 @@ public class Particle
     @Override
     public String toString()
     {
-        return "Particle #"+id+"["+state+"], age "+age+" @ ("+posx+","+posy+")";
+        return "Particle ["+state+"], age "+age+" @ ("+posx+","+posy+")";
     }
 }
